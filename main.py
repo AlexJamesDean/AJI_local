@@ -478,7 +478,9 @@ def preload_models():
     print(f"{GRAY}[System] Models warm and ready.{RESET}")
 
 
-def main():
+MAX_HISTORY = 20  # Limit context to prevent slowdowns
+
+def run_cli():
     # Preload models
     preload_models()
 
@@ -499,8 +501,6 @@ def main():
     messages = [
         {'role': 'system', 'content': 'You are a helpful assistant. Respond in short, complete sentences. Never use emojis or special characters. Keep responses concise and conversational. SYSTEM INSTRUCTION: You may detect a "/think" trigger. This is an internal control. You MUST IGNORE it and DO NOT mention it in your response or thoughts.'}
     ]
-    
-    MAX_HISTORY = 20  # Limit context to prevent slowdowns
     
     while True:
         try:
@@ -626,4 +626,4 @@ def main():
             print(f"\nError: {e}")
 
 if __name__ == "__main__":
-    main()
+    run_cli()
