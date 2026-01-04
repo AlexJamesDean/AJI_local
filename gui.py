@@ -4,6 +4,9 @@ import threading
 import json
 import time
 
+# DEBUG: Set to True to test streaming without TTS blocking
+DEBUG_SKIP_TTS = False
+
 def main(page: ft.Page):
     # --- UI Configuration ---
     page.title = "Pocket AI"
@@ -23,6 +26,30 @@ def main(page: ft.Page):
         {'role': 'system', 'content': 'You are a helpful assistant. Respond in short, complete sentences. Never use emojis or special characters. Keep responses concise and conversational. SYSTEM INSTRUCTION: You may detect a "/think" trigger. This is an internal control. You MUST IGNORE it and DO NOT mention it in your response or thoughts.'}
     ]
     is_tts_enabled = True # Default to True as per backend preference
+    
+    # Streaming state - shared between threads via pubsub
+    streaming_state = {
+        'response_control': None,
+        'thought_control': None,
+        'response_text': '',
+        'thought_text': ''
+    }
+    
+    # Pubsub handler for thread-safe UI updates (runs on main Flet thread)
+    def on_stream_update(msg):
+        if msg.get('type') == 'response':
+            if streaming_state['response_control']:
+                streaming_state['response_control'].value = msg['text']
+                page.update()
+        elif msg.get('type') == 'thought':
+            if streaming_state['thought_control']:
+                streaming_state['thought_control'].value = msg['text']
+                streaming_state['thought_control'].visible = True
+                page.update()
+        elif msg.get('type') == 'done':
+            page.update()
+    
+    page.pubsub.subscribe(on_stream_update)
 
     # --- Preload Models (Background) ---
     def preload_background():
@@ -152,35 +179,50 @@ def main(page: ft.Page):
                 }
 
                 # Create AI Updateable Message
+                max_bubble_width = min(page.window_width * 0.8, 400)
                 ai_bubble = ft.Container(
                     content=ft.Column(spacing=5), # Column to hold thought + response
                     bgcolor="#363636",
                     padding=15,
-                    border_radius=ft.BorderRadius.only(top_left=15, top_right=15, bottom_right=15, bottom_left=0)
+                    border_radius=ft.BorderRadius.only(top_left=15, top_right=15, bottom_right=15, bottom_left=0),
+                    width=max_bubble_width
                 )
                 
-                # We need to schedule the add to the UI thread
-                # We need to schedule the add to the UI thread
-                def add_ai_bubble():
-                    chat_list.controls.append(ft.Row([ai_bubble], alignment=ft.MainAxisAlignment.START))
-                    chat_list.update()
-                
-                add_ai_bubble()
+                # Add bubble to chat list
+                chat_list.controls.append(ft.Row([ai_bubble], alignment=ft.MainAxisAlignment.START))
+                page.update()
 
                 # Response Logic
                 full_response = ""
                 thought_buffer = ""
-                response_text_control = ft.Text("", size=15)
-                thought_text_control = ft.Text("", size=12, color=ft.Colors.GREY_400, italic=True, font_family="Roboto Mono", visible=False)
+                response_text_control = ft.Text("", size=15, width=max_bubble_width - 30, no_wrap=False)
+                thought_text_control = ft.Text("", size=12, color=ft.Colors.GREY_400, italic=True, font_family="Roboto Mono", visible=False, width=max_bubble_width - 30, no_wrap=False)
+                
+                # Store controls in streaming_state for pubsub handler
+                streaming_state['response_control'] = response_text_control
+                streaming_state['thought_control'] = thought_text_control
                 
                 ai_bubble.content.controls = [thought_text_control, response_text_control]
+                page.update()
                 
                 sentence_buffer = backend.SentenceBuffer()
 
+                # DEBUG: Track timing
+                debug_start = time.time()
+                chunk_count = 0
+                
+                print(f"\n[DEBUG] Starting stream at {debug_start:.3f}")
+                
                 with backend.http_session.post(f"{backend.OLLAMA_URL}/chat", json=payload, stream=True) as r:
                     r.raise_for_status()
+                    print(f"[DEBUG] HTTP response received, status: {r.status_code}")
+                    
                     for line in r.iter_lines():
                         if line:
+                            chunk_count += 1
+                            elapsed = time.time() - debug_start
+                            print(f"[DEBUG] [{elapsed:.3f}s] Chunk #{chunk_count} received ({len(line)} bytes)")
+                            
                             try:
                                 chunk = json.loads(line.decode('utf-8'))
                                 msg = chunk.get('message', {})
@@ -188,27 +230,31 @@ def main(page: ft.Page):
                                 if 'thinking' in msg and msg['thinking']:
                                     thought = msg['thinking']
                                     thought_buffer += thought
-                                    thought_text_control.value = thought_buffer
-                                    thought_text_control.visible = True
-                                    thought_text_control.update()
+                                    print(f"[DEBUG] [{elapsed:.3f}s] Sending thought via pubsub")
+                                    page.pubsub.send_all({'type': 'thought', 'text': thought_buffer})
 
                                 if 'content' in msg and msg['content']:
                                     content = msg['content']
                                     full_response += content
-                                    response_text_control.value = full_response
-                                    response_text_control.update()
+                                    print(f"[DEBUG] [{elapsed:.3f}s] Sending response via pubsub: '{content[:20]}...'")
+                                    page.pubsub.send_all({'type': 'response', 'text': full_response})
                                     
-                                    if is_tts_enabled:
+                                    if is_tts_enabled and not DEBUG_SKIP_TTS:
                                         sentences = sentence_buffer.add(content)
                                         for s in sentences:
                                             backend.tts.queue_sentence(s)
                                             
                             except Exception as inner_e:
-                                # print(f"DEBUG: Error parsing chunk: {inner_e}")
+                                print(f"[DEBUG] Error parsing chunk: {inner_e}")
                                 continue
                 
+                print(f"[DEBUG] Stream complete. Total chunks: {chunk_count}, elapsed: {time.time() - debug_start:.3f}s")
+                
+                # Signal completion
+                page.pubsub.send_all({'type': 'done'})
+                
                 # Flush TTS
-                if is_tts_enabled:
+                if is_tts_enabled and not DEBUG_SKIP_TTS:
                     rem = sentence_buffer.flush()
                     if rem: backend.tts.queue_sentence(rem)
                 
@@ -236,8 +282,8 @@ def main(page: ft.Page):
         
         finally:
             user_input.disabled = False
-            # user_input.focus()
-            user_input.update()
+            user_input.focus()
+            page.update()
 
 
     # --- Layout ---
