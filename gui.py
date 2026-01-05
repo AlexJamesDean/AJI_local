@@ -1,5 +1,5 @@
 import flet as ft
-import main as backend
+import backend
 import threading
 import json
 import time

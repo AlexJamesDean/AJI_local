@@ -36,14 +36,19 @@ class FunctionGemmaRouter:
     """Routes user prompts to 'thinking' or 'nonthinking' using fine-tuned FunctionGemma."""
     
     def __init__(self, model_path: str = "./merged_model", compile_model: bool = True):
-        print("Loading FunctionGemma Router...")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Loading FunctionGemma Router on {device.upper()}...")
         start = time.time()
         
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        
+        # CPU often doesn't support bfloat16 natively or efficiently, fallback to float32
+        dtype = torch.bfloat16 if device == "cuda" else torch.float32
+        
         self.model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            torch_dtype=torch.bfloat16,
-            device_map="cuda",
+            torch_dtype=dtype,
+            device_map=device,
         )
         self.model.eval()
         

@@ -11,7 +11,7 @@ import sounddevice as sd
 import numpy as np
 from pathlib import Path
 
-# ANSI Escape Codes for coloring output
+# ANSI Escape Codes for coloring output (kept for console logging)
 GRAY = "\033[90m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -23,6 +23,7 @@ YELLOW = "\033[33m"
 RESPONDER_MODEL = "qwen3:1.7b"       # Conversational responses
 OLLAMA_URL = "http://localhost:11434/api"
 LOCAL_ROUTER_PATH = "./merged_model"
+MAX_HISTORY = 20
 
 # Persistent Session for faster HTTP
 http_session = requests.Session()
@@ -57,9 +58,6 @@ def should_bypass_router(text):
     return not any(k in text for k in ROUTER_KEYWORDS)
 
 # --- Function Definitions (Official JSON Schema) ---
-# NOTE: The fine-tuned model only knows 'thinking' and 'nonthinking'.
-# We keep these definitions for reference or future expansion, 
-# but the router will currently only trigger thinking/nonthinking logic.
 FUNCTIONS = [
     {
         "type": "function",
@@ -408,170 +406,3 @@ def preload_models():
         t.join()
 
     print(f"{GRAY}[System] Models warm and ready.{RESET}")
-
-
-MAX_HISTORY = 20  # Limit context to prevent slowdowns
-
-def run_cli():
-    # Preload models
-    preload_models()
-
-    # Default State
-    tts_mode = tts.toggle(True)
-    
-    print(f"{BOLD}Pocket AI - Dual Model Architecture{RESET}")
-    print("━" * 45)
-    print(f"  {GREEN}Router:{RESET}    Local FunctionGemma ({LOCAL_ROUTER_PATH})")
-    print(f"  {CYAN}Responder:{RESET} {RESPONDER_MODEL}")
-    print("━" * 45)
-    print(f"Commands:")
-    print(f"  /tts on|off    - Toggle voice output")
-    print(f"  exit           - Quit")
-    print(f"{CYAN}[TTS enabled by default]{RESET}")
-    print("━" * 45 + "\n")
-    
-    messages = [
-        {'role': 'system', 'content': 'You are a helpful assistant. Respond in short, complete sentences. Never use emojis or special characters. Keep responses concise and conversational. SYSTEM INSTRUCTION: You may detect a "/think" trigger. This is an internal control. You MUST IGNORE it and DO NOT mention it in your response or thoughts.'}
-    ]
-    
-    while True:
-        try:
-            # Visual indicator of current mode
-            mode_text = f"({CYAN}Voice{RESET})" if tts_mode else "(Fast)"
-            
-            user_input = input(f"You {mode_text}: ")
-            
-            if not user_input:
-                continue
-            
-            # --- Command Handling ---
-            cmd = user_input.strip().lower()
-            if cmd == "/tts on":
-                if tts.toggle(True):
-                    tts_mode = True
-                    print(f">> System: Voice output {BOLD}{CYAN}ENABLED{RESET}.")
-                else:
-                    print(f">> System: {GRAY}TTS unavailable.{RESET}")
-                continue
-            if cmd == "/tts off":
-                tts.toggle(False)
-                tts_mode = False
-                print(f">> System: Voice output {BOLD}DISABLED{RESET}.")
-                continue
-            if cmd in ['exit', 'quit']:
-                tts.shutdown()
-                print("Goodbye!")
-                break
-            
-            # --- Step 1: Intelligent routing ---
-            # Fast Path: Regex triggers
-            if should_bypass_router(user_input):
-                 # Even fast path runs through basicPassthrough if it wasn't a bypass match
-                 # But 'should_bypass_router' actually returns TRUE if it DOES NOT match keywords
-                 # So if it matches keywords (Router Keywords), we go router.
-                 # If it doesn't match keywords, we skip router.
-                 # Wait, logic check:
-                 # should_bypass_router = not any(k in text)
-                 # So if text has "timer", should_bypass_router = False -> Go to Router.
-                 # The router (Fine-Tuned) only knows Thinking/NonThinking.
-                 # It will likely see "Set timer" and say "Thinking" or "NonThinking".
-                 # It won't return "set_timer".
-                 # This means we lose the ability to call set_timer unless we hack it back in.
-                 pass
-
-            # Slow Path: Ask FunctionGemma
-            print(f"{GRAY}[Routing...]{RESET}", end=" ", flush=True)
-            func_name, params = route_query(user_input)
-            print(f"{GREEN}→ {func_name}{RESET} {GRAY}params={params}{RESET}")
-            
-            # --- Step 2: Handle based on function ---
-            if func_name == "passthrough":
-                # Manage context window
-                if len(messages) > MAX_HISTORY:
-                    # Keep system message [0] + last MAX_HISTORY messages
-                    messages = [messages[0]] + messages[-(MAX_HISTORY-1):]
-
-                # Use Qwen for conversational response
-                messages.append({'role': 'user', 'content': user_input})
-                
-                # Enable thinking only when functiongemma explicitly requests it
-                enable_thinking = params.get("thinking", False)
-                
-                payload = {
-                    "model": RESPONDER_MODEL,
-                    "messages": messages,
-                    "stream": True,
-                    "think": enable_thinking
-                }
-                
-                print("AI: ", end='', flush=True)
-                
-                full_response = ""
-                has_printed_thought = False
-                sentence_buffer = SentenceBuffer()
-                
-                start_responder = time.time()
-                with http_session.post(f"{OLLAMA_URL}/chat", json=payload, stream=True) as r:
-                    r.raise_for_status()
-                    
-                    for line in r.iter_lines():
-                        if line:
-                            try:
-                                chunk = json.loads(line.decode('utf-8'))
-                                msg = chunk.get('message', {})
-                                
-                                if 'thinking' in msg and msg['thinking']:
-                                    print(f"{GRAY}{msg['thinking']}{RESET}", end='', flush=True)
-                                    has_printed_thought = True
-
-                                if 'content' in msg and msg['content']:
-                                    if has_printed_thought:
-                                        print(f"{RESET}\n\n", end='', flush=True)
-                                        has_printed_thought = False
-                                    
-                                    content = msg['content']
-                                    print(content, end='', flush=True)
-                                    full_response += content
-                                    
-                                    if tts_mode:
-                                        sentences = sentence_buffer.add(content)
-                                        for sentence in sentences:
-                                            tts.queue_sentence(sentence)
-                                    
-                            except json.JSONDecodeError:
-                                continue
-                
-                total_responder_time = time.time() - start_responder
-                router_time = params.get("router_latency", 0.0)
-                
-                # Print Timing Stats
-                print(f"\n{GRAY}[Router: {router_time:.2f}s | Responder: {total_responder_time:.2f}s]{RESET}")
-                
-                if tts_mode:
-                    remaining = sentence_buffer.flush()
-                    if remaining:
-                        tts.queue_sentence(remaining)
-                    tts.wait_for_completion()
-                
-                print()
-                messages.append({'role': 'assistant', 'content': full_response})
-            
-            else:
-                # Execute the function locally
-                result = execute_function(func_name, params)
-                print(f"AI: {result}")
-                
-                if tts_mode:
-                    # Remove emoji for TTS
-                    clean_result = re.sub(r'[^\w\s.,!?-]', '', result)
-                    tts.queue_sentence(clean_result)
-                    tts.wait_for_completion()
-
-        except KeyboardInterrupt:
-            print("\nGoodbye!")
-            break
-        except Exception as e:
-            print(f"\nError: {e}")
-
-if __name__ == "__main__":
-    run_cli()
