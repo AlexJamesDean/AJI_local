@@ -1,95 +1,74 @@
 """
-Main PySide6 application setup and layout.
+Main PySide6 application setup and layout using Fluent Widgets.
 """
 
 import threading
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QFrame,
-    QStackedWidget, QTabBar
+import sys
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon
+
+from qfluentwidgets import (
+    FluentWindow, NavigationItemPosition, FluentIcon as FIF,
+    SplashScreen
 )
-from PySide6.QtCore import Qt, QTimer
 
 from core.llm import preload_models
 from core.tts import tts
 from gui.handlers import ChatHandlers
-from gui.styles import STYLESHEET
+
+from gui.styles import AURA_STYLESHEET 
+
 from gui.tabs.chat import ChatTab
 from gui.tabs.planner import PlannerTab
 from gui.tabs.briefing import BriefingView
+from gui.tabs.home_automation import HomeAutomationTab
 
 
-class MainWindow(QMainWindow):
-    """Main application window."""
+class MainWindow(FluentWindow):
+    """Main application window using Fluent Design."""
     
     def __init__(self):
         super().__init__()
         self.setWindowTitle("A.D.A")
-        self.setMinimumSize(1000, 700)
-        self.resize(1000, 700)
+        self.setMinimumSize(1100, 750)
+        self.resize(1200, 800)
         
-        # Apply global stylesheet
-        self.setStyleSheet(STYLESHEET)
+        
+        # Center on screen
+        # Disable Mica to allow our Deep Navy background to show through
+        # self.windowEffect.setMicaEffect(self.winId())
+        self.setStyleSheet(AURA_STYLESHEET)
         
         # Initialize handlers
-        # Handlers are initialized before UI because they store state, 
-        # but they rely on UI methods which we proxy below.
         self.handlers = ChatHandlers(self)
         
-        self._setup_ui()
+        self._init_window()
         self._connect_signals()
         self._init_background()
         
-    def _setup_ui(self):
-        # Central widget
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-        
-        # --- Top Tab Bar (persistent across all views) ---
-        tab_bar_container = QFrame()
-        tab_bar_container.setObjectName("chatPanel")
-        tab_bar_layout = QVBoxLayout(tab_bar_container)
-        tab_bar_layout.setContentsMargins(0, 0, 0, 0)
-        tab_bar_layout.setSpacing(0)
-        
-        self.top_tab_bar = QTabBar()
-        self.top_tab_bar.setObjectName("topTabBar")
-        self.top_tab_bar.addTab("💬  Chat")
-        self.top_tab_bar.addTab("📋  Planner")
-        self.top_tab_bar.addTab("📰  Briefing")
-        self.top_tab_bar.setExpanding(False)
-        tab_bar_layout.addWidget(self.top_tab_bar)
-        
-        # Tab bar divider
-        tab_divider = QFrame()
-        tab_divider.setFixedHeight(1)
-        tab_divider.setStyleSheet("background-color: #3d3d3d;")
-        tab_bar_layout.addWidget(tab_divider)
-        
-        main_layout.addWidget(tab_bar_container)
-        
-        # --- Stacked Widget for tab content ---
-        self.content_stack = QStackedWidget()
-        main_layout.addWidget(self.content_stack)
-        
-        # --- Page 0: Chat ---
+    def _init_window(self):
+        # Create sub-interfaces
         self.chat_tab = ChatTab()
-        self.content_stack.addWidget(self.chat_tab)
+        self.chat_tab.setObjectName("chatInterface")
         
-        # --- Page 1: Planner ---
         self.planner_tab = PlannerTab()
-        self.content_stack.addWidget(self.planner_tab)
+        self.planner_tab.setObjectName("plannerInterface")
         
-        # --- Page 2: Briefing ---
         self.briefing_view = BriefingView()
-        self.content_stack.addWidget(self.briefing_view)
-    
+        self.briefing_view.setObjectName("briefingInterface")
+        
+        self.home_tab = HomeAutomationTab()
+        self.home_tab.setObjectName("homeInterface")
+        
+        # Add interfaces to navigation
+        self.addSubInterface(self.chat_tab, FIF.CHAT, "Chat")
+        self.addSubInterface(self.planner_tab, FIF.CALENDAR, "Planner")
+        self.addSubInterface(self.briefing_view, FIF.DATE_TIME, "Briefing")
+        self.addSubInterface(self.home_tab, FIF.HOME, "Home Auto")
+        
     def _connect_signals(self):
         """Connect signals between UI components and logic."""
-        self.top_tab_bar.currentChanged.connect(self._on_tab_changed)
-        
         # Chat Logic Connections
         self.chat_tab.new_chat_requested.connect(self.handlers.clear_chat)
         self.chat_tab.send_message_requested.connect(self._on_send)
@@ -101,10 +80,6 @@ class MainWindow(QMainWindow):
         self.chat_tab.session_pin_requested.connect(self.handlers.pin_session)
         self.chat_tab.session_rename_requested.connect(self.handlers.rename_session)
         self.chat_tab.session_delete_requested.connect(self.handlers.delete_session)
-
-    def _on_tab_changed(self, index: int):
-        """Handle tab bar selection changes."""
-        self.content_stack.setCurrentIndex(index)
 
     def _on_send(self, text):
         """Forward send request to handlers."""
@@ -125,12 +100,9 @@ class MainWindow(QMainWindow):
                 self.set_status("Ready | TTS Failed")
         
         threading.Thread(target=preload_background, daemon=True).start()
-        # Refresh sidebar specifically on the chat tab
         self.chat_tab.refresh_sidebar()
     
     # --- Public Methods for Handlers (Facade Pattern) ---
-    # These methods proxy calls to the unified ChatTab component
-    # allowing ChatHandlers to remain unchanged for now.
     
     def set_status(self, text: str):
         self.chat_tab.set_status(text)
@@ -160,4 +132,3 @@ class MainWindow(QMainWindow):
 def create_app():
     """Create and return the main window."""
     return MainWindow()
-
