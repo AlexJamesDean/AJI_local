@@ -24,6 +24,7 @@ from gui.components.schedule import ScheduleComponent
 from gui.components.timer import TimerComponent
 from gui.components.schedule import ScheduleComponent
 from gui.components.timer import TimerComponent
+from gui.components.alarm import AlarmComponent
 from gui.views.briefing_view import BriefingView
 
 
@@ -661,6 +662,9 @@ class MainWindow(QMainWindow):
         
         self.timer_component = TimerComponent()
         flow_layout.addWidget(self.timer_component)
+        
+        self.alarm_component = AlarmComponent()
+        flow_layout.addWidget(self.alarm_component)
         
         planner_layout.addWidget(flow_col)
         

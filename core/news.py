@@ -13,12 +13,13 @@ class NewsManager:
         self.cache = {}
         self.cache_duration = datetime.timedelta(minutes=15)
 
-    def get_briefing(self) -> list:
+    def get_briefing(self, status_callback=None) -> list:
         """
         Get a curated briefing.
         Fetches 'top' and 'technology' news, then asks AI to pick the best ones.
         """
         # 1. Check cache first (for 'briefing' key)
+        if status_callback: status_callback("Checking local cache...")
         cached = self._get_from_cache("briefing")
         if cached:
             return cached
@@ -26,11 +27,13 @@ class NewsManager:
         # 2. Fetch raw news
         raw_news = []
         try:
+            if status_callback: status_callback("Scanning global headlines...")
             # Fetch generic top news
             for r in self.ddgs.news("top news", max_results=5):
                 r['category'] = 'Top Stories'
                 raw_news.append(r)
             
+            if status_callback: status_callback("Retrieving technology sector updates...")
             # Fetch Tech news
             for r in self.ddgs.news("technology news", max_results=5):
                 r['category'] = 'Technology'
@@ -46,6 +49,7 @@ class NewsManager:
             return []
 
         # 3. AI Curation
+        if status_callback: status_callback("AI is reading and curating stories...")
         curated_news = self._curate_with_ai(raw_news)
         
         # 4. Fallback if AI fails: just return raw news formatted

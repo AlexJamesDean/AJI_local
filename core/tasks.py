@@ -85,5 +85,55 @@ class TaskManager:
         except Exception as e:
             print(f"Error toggling task: {e}")
 
+    def add_alarm(self, time: str, label: str):
+        """Add a new alarm."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                # Ensure table exists (lazy init for existing users)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS alarms (
+                        id TEXT PRIMARY KEY,
+                        time TEXT NOT NULL,
+                        label TEXT,
+                        enabled BOOLEAN DEFAULT 1
+                    )
+                """)
+                alarm_id = str(uuid.uuid4())
+                cursor.execute(
+                    "INSERT INTO alarms (id, time, label) VALUES (?, ?, ?)",
+                    (alarm_id, time, label)
+                )
+                conn.commit()
+                return alarm_id
+        except Exception as e:
+            print(f"Error adding alarm: {e}")
+            return None
+
+    def get_alarms(self) -> List[Dict]:
+        """Get all alarms."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='alarms'")
+                if not cursor.fetchone():
+                    return []
+                    
+                cursor.execute("SELECT * FROM alarms ORDER BY time ASC")
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            return []
+
+    def delete_alarm(self, alarm_id: str):
+        """Delete an alarm."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM alarms WHERE id = ?", (alarm_id,))
+                conn.commit()
+        except Exception as e:
+            print(f"Error deleting alarm: {e}")
+
 # Global instance
 task_manager = TaskManager()

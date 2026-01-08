@@ -7,7 +7,7 @@ from pathlib import Path
 DB_PATH = "chat_history.db"
 
 class ChatHistoryManager:
-    def __init__(self, db_path=DB_PATH):
+    def __init__(self, db_path: str = "data/chat_history.db"):
         self.db_path = db_path
         self._init_db()
 

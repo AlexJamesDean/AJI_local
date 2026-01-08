@@ -7,9 +7,11 @@ from core.news import news_manager
 
 class NewsLoaderThread(QThread):
     loaded = Signal(list)
+    status_update = Signal(str)
     
     def run(self):
-        news = news_manager.get_briefing()
+        # Pass a lambda that emits the signal back to the main thread
+        news = news_manager.get_briefing(status_callback=self.status_update.emit)
         self.loaded.emit(news)
 
 class BriefingView(QWidget):
@@ -147,6 +149,7 @@ class BriefingView(QWidget):
             
         # Start thread
         self.thread = NewsLoaderThread()
+        self.thread.status_update.connect(self.bk_text.setText)
         self.thread.loaded.connect(self.display_news)
         self.thread.start()
         
