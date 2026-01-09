@@ -1,5 +1,2 @@
-
 from qfluentwidgets import FluentIcon
-for attr in dir(FluentIcon):
-    if not attr.startswith("__"):
-        print(attr)
+print([name for name in dir(FluentIcon) if not name.startswith('_')])

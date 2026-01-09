@@ -1,13 +1,71 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, 
-    QCalendarWidget, QScrollArea, QPushButton, QDialog, QLineEdit, QDateTimeEdit, QTextEdit, QComboBox
+    QScrollArea, QPushButton
 )
 from PySide6.QtCore import Qt, QDate, QTime, QDateTime, Signal
-from PySide6.QtGui import QTextCharFormat, QColor, QFont
+from PySide6.QtGui import QColor
+
+from qfluentwidgets import (
+    PushButton, PrimaryPushButton, LineEdit, 
+    ComboBox, MessageBoxBase, SubtitleLabel
+)
+from qfluentwidgets.components.date_time.fast_calendar_view import FastCalendarView as CalendarView
+from qfluentwidgets.components.date_time.calendar_picker import CalendarPicker
+from qfluentwidgets.components.date_time.time_picker import TimePicker
+
 from core.calendar import calendar_manager
+from datetime import datetime
+
+class AddEventDialog(MessageBoxBase):
+    """Custom Dialog for adding events using Fluent Widgets."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.titleLabel = SubtitleLabel("Add Event", self)
+        
+        # UI Setup
+        self.viewLayout.addWidget(self.titleLabel)
+        
+        # Title Input
+        self.titleEdit = LineEdit(self)
+        self.titleEdit.setPlaceholderText("Event Title")
+        self.viewLayout.addWidget(self.titleEdit)
+        
+        # Date Picker
+        self.datePicker = CalendarPicker(self)
+        self.datePicker.setDate(QDate.currentDate())
+        self.viewLayout.addWidget(self.datePicker)
+        
+        # Time Picker
+        self.timePicker = TimePicker(self)
+        self.timePicker.setTime(QTime.currentTime())
+        # Use 24h format or AM/PM? TimePicker defaults to system or 24h usually.
+        self.viewLayout.addWidget(self.timePicker)
+        
+        # Category
+        self.catCombo = ComboBox(self)
+        self.catCombo.addItems(["WORK", "PERSONAL", "OTHER"])
+        self.viewLayout.addWidget(self.catCombo)
+        
+        # Buttons are handled by MessageBoxBase (yesButton, cancelButton)
+        self.yesButton.setText("Save")
+        self.cancelButton.setText("Cancel")
+        
+        self.widget.setMinimumWidth(350)
+        
+    def get_data(self):
+        title = self.titleEdit.text()
+        date = self.datePicker.date
+        time = self.timePicker.time
+        cat = self.catCombo.text()
+        
+        dt = QDateTime(date, time)
+        start = dt.toString("yyyy-MM-dd HH:mm:ss")
+        end = dt.addSecs(3600).toString("yyyy-MM-dd HH:mm:ss")
+        
+        return title, start, end, cat
 
 class ScheduleComponent(QWidget):
-    """Component for displaying daily schedule and calendar."""
+    """Component for displaying daily schedule and calendar. Fluent Version."""
     
     def __init__(self):
         super().__init__()
@@ -28,24 +86,25 @@ class ScheduleComponent(QWidget):
         # Header
         header_layout = QHBoxLayout()
         self.date_label = QLabel(self.selected_date.toString("dddd, MMMM d"))
-        self.date_label.setStyleSheet("color: white; font-size: 16px; font-weight: bold; background: transparent;")
+        self.date_label.setStyleSheet("color: #e8eaed; font-size: 16px; font-weight: bold; background: transparent;")
         header_layout.addWidget(self.date_label)
         header_layout.addStretch()
         
-        add_btn = QPushButton("+")
-        add_btn.setFixedSize(30, 30)
+        add_btn = PushButton("+")
+        add_btn.setFixedSize(32, 32)
         add_btn.setCursor(Qt.PointingHandCursor)
+        # Custom styling for round button
         add_btn.setStyleSheet("""
             QPushButton { 
-                background: #3d3d3d; 
-                color: #bd93f9; 
-                border-radius: 15px; 
-                border: 1px solid #bd93f9; 
-                font-size: 16px; 
+                background: rgba(51, 181, 229, 0.1); 
+                color: #33b5e5; 
+                border-radius: 16px; 
+                border: 1px solid #33b5e5; 
+                font-size: 18px; 
+                font-weight: bold;
             }
             QPushButton:hover { 
-                background: rgba(189, 147, 249, 0.2); 
-                color: white;
+                background: rgba(51, 181, 229, 0.2); 
             }
         """)
         add_btn.clicked.connect(self._show_add_event_dialog)
@@ -67,55 +126,23 @@ class ScheduleComponent(QWidget):
         self.timeline_layout.addStretch()
         
         scroll.setWidget(self.timeline_content)
-        timeline_layout.addWidget(scroll, 2) # Stretch factor 2
+        timeline_layout.addWidget(scroll, 2) 
         
         layout.addWidget(timeline_container, 2)
         
-        # --- Calendar Widget ---
-        self.calendar = QCalendarWidget()
-        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
-        self.calendar.clicked.connect(self._on_date_selected)
-        self.calendar.setStyleSheet("""
-            QCalendarWidget QWidget { 
-                background-color: transparent; 
-                color: white; 
-            }
-            QCalendarWidget QToolButton { 
-                color: #e8eaed; 
-                font-weight: bold;
-                icon-size: 24px; 
-                background: transparent;
-                border: none;
-                margin: 5px;
-            }
-            QCalendarWidget QToolButton:hover {
-                background: #2b2d31;
-                border-radius: 4px;
-            }
-            QCalendarWidget QMenu { 
-                background-color: #2b2d31; 
-                color: white; 
-                border: 1px solid #3d3d3d;
-            }
-            QCalendarWidget QSpinBox { 
-                color: white; 
-                background: #3d3d3d; 
-                selection-background-color: #bd93f9; 
-                border-radius: 4px;
-            }
-            QCalendarWidget QAbstractItemView:enabled { 
-                color: #e8eaed; 
-                background: transparent;
-                selection-background-color: #bd93f9; 
-                selection-color: white; 
-                border-radius: 16px; 
-            }
-            QCalendarWidget QAbstractItemView:disabled { 
-                color: #555; 
-            }
-        """)
+        # --- Fluent Calendar View ---
+        self.calendar = CalendarView()
+        # Prevent auto-hide (it assumes popup behavior)
+        self.calendar.hide = lambda: None
+        self.calendar.close = lambda: None
         
-        layout.addWidget(self.calendar, 1) # Stretch factor 1
+        # Connect date changed signal
+        self.calendar.dateChanged.connect(self._on_date_selected)
+        
+        # Style overrides usually handled by global theme, but we can enforce some if needed
+        # Fluent CalendarView generally looks good in dark mode.
+        
+        layout.addWidget(self.calendar, 1)
 
     def _on_date_selected(self, date):
         self.selected_date = date
@@ -124,42 +151,41 @@ class ScheduleComponent(QWidget):
         
     def refresh_events(self):
         """Clear timeline and load events for selected date."""
-        # Clear existing
         while self.timeline_layout.count() > 1: # Keep stretch
             item = self.timeline_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
                 
-        # Load from DB
         date_str = self.selected_date.toString("yyyy-MM-dd")
         events = calendar_manager.get_events(date_str)
         
         if not events:
-            # Empty state
             empty = QLabel("No events scheduled")
             empty.setAlignment(Qt.AlignCenter)
-            empty.setStyleSheet("color: #6e6e6e; padding: 20px; font-style: italic;")
+            empty.setStyleSheet("color: #8b9bb4; padding: 20px; font-style: italic;")
             self.timeline_layout.insertWidget(0, empty)
         else:
             for event in events:
                 self._add_event_card(event)
 
     def _add_event_card(self, event):
-        """Create a card for a single event."""
         card = QFrame()
         card.setCursor(Qt.PointingHandCursor)
         
-        # Color coding based on category
         cat = event['category']
-        accent_color = "#bd93f9" if cat == "WORK" else "#4F8EF7" if cat == "PERSONAL" else "#50fa7b"
+        accent_color = "#33b5e5" if "WORK" in cat else "#00c853" if "PERSONAL" in cat else "#aa66cc"
         
         card.setStyleSheet(f"""
             QFrame {{
-                background-color: rgba(255, 255, 255, 0.05);
+                background-color: #111625;
                 border-radius: 8px;
+                border: 1px solid #1a2236;
                 border-left: 3px solid {accent_color};
             }}
-            QFrame:hover {{ background-color: rgba(255, 255, 255, 0.1); }}
+            QFrame:hover {{ 
+                background-color: #1a2236;
+                border: 1px solid {accent_color};
+            }}
         """)
         
         layout = QHBoxLayout(card)
@@ -179,11 +205,11 @@ class ScheduleComponent(QWidget):
         details.setSpacing(4)
         
         title_lbl = QLabel(event['title'])
-        title_lbl.setStyleSheet("color: white; font-weight: 500; font-size: 14px; background: transparent; border: none;")
+        title_lbl.setStyleSheet("color: #e8eaed; font-weight: 500; font-size: 14px; background: transparent; border: none;")
         details.addWidget(title_lbl)
         
         cat_lbl = QLabel(cat)
-        cat_lbl.setStyleSheet(f"color: {accent_color}; font-size: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;")
+        cat_lbl.setStyleSheet(f"color: {accent_color}; font-size: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; border: none;")
         cat_lbl.setFixedWidth(cat_lbl.sizeHint().width() + 15)
         details.addWidget(cat_lbl)
         
@@ -200,7 +226,6 @@ class ScheduleComponent(QWidget):
         del_btn.clicked.connect(lambda: self._delete_event(event['id']))
         layout.addWidget(del_btn)
         
-        # Insert before stretch
         self.timeline_layout.insertWidget(self.timeline_layout.count()-1, card)
 
     def _delete_event(self, event_id):
@@ -209,54 +234,9 @@ class ScheduleComponent(QWidget):
         
     def _show_add_event_dialog(self):
         """Show dialog to create a new event."""
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Add Event")
-        dialog.setStyleSheet("background-color: #2b2d31; color: white;")
-        layout = QVBoxLayout(dialog)
-        
-        # Title
-        layout.addWidget(QLabel("Title:"))
-        title_edit = QLineEdit()
-        title_edit.setStyleSheet("background: #1a1c1e; border: 1px solid #3d3d3d; padding: 5px; color: white;")
-        layout.addWidget(title_edit)
-        
-        # Time
-        layout.addWidget(QLabel("Time:"))
-        time_edit = QDateTimeEdit(QDateTime.currentDateTime())
-        time_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
-        time_edit.setCalendarPopup(True)
-        time_edit.setStyleSheet("background: #1a1c1e; border: 1px solid #3d3d3d; padding: 5px; color: white;")
-        layout.addWidget(time_edit)
-        
-        # Category
-        layout.addWidget(QLabel("Category:"))
-        cat_edit = QComboBox()
-        cat_edit.addItems(["WORK", "PERSONAL", "OTHER"])
-        cat_edit.setStyleSheet("background: #1a1c1e; border: 1px solid #3d3d3d; padding: 5px; color: white;")
-        layout.addWidget(cat_edit)
-        
-        # Buttons
-        btn_layout = QHBoxLayout()
-        save_btn = QPushButton("Save")
-        save_btn.setStyleSheet("background: #4F8EF7; color: white; padding: 8px; border-radius: 4px;")
-        save_btn.clicked.connect(dialog.accept)
-        
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setStyleSheet("background: transparent; color: white; padding: 8px;")
-        cancel_btn.clicked.connect(dialog.reject)
-        
-        btn_layout.addWidget(cancel_btn)
-        btn_layout.addWidget(save_btn)
-        layout.addLayout(btn_layout)
-        
-        if dialog.exec():
-            title = title_edit.text()
+        w = AddEventDialog(self.window())
+        if w.exec():
+            title, start, end, cat = w.get_data()
             if title:
-                dt = time_edit.dateTime()
-                start = dt.toString("yyyy-MM-dd HH:mm:ss")
-                end = dt.addSecs(3600).toString("yyyy-MM-dd HH:mm:ss") # Default 1h
-                cat = cat_edit.currentText()
-                
                 calendar_manager.add_event(title, start, end, cat)
                 self.refresh_events()
-from datetime import datetime

@@ -13,16 +13,18 @@ from qfluentwidgets import (
     SplashScreen
 )
 
-from core.llm import preload_models
-from core.tts import tts
 from gui.handlers import ChatHandlers
+from core.model_manager import unload_all_models
 
 from gui.styles import AURA_STYLESHEET 
 
+from gui.tabs.dashboard import DashboardView
 from gui.tabs.chat import ChatTab
 from gui.tabs.planner import PlannerTab
 from gui.tabs.briefing import BriefingView
 from gui.tabs.home_automation import HomeAutomationTab
+from gui.tabs.agent import AgentTab
+from gui.components.system_monitor import SystemMonitor
 
 
 class MainWindow(FluentWindow):
@@ -43,12 +45,18 @@ class MainWindow(FluentWindow):
         # Initialize handlers
         self.handlers = ChatHandlers(self)
         
+        # Add system monitor to title bar
+        self._init_system_monitor()
+        
         self._init_window()
         self._connect_signals()
         self._init_background()
         
     def _init_window(self):
         # Create sub-interfaces
+        self.dashboard_view = DashboardView()
+        self.dashboard_view.setObjectName("dashboardInterface")
+
         self.chat_tab = ChatTab()
         self.chat_tab.setObjectName("chatInterface")
         
@@ -61,11 +69,16 @@ class MainWindow(FluentWindow):
         self.home_tab = HomeAutomationTab()
         self.home_tab.setObjectName("homeInterface")
         
+        self.agent_tab = AgentTab()
+        self.agent_tab.setObjectName("agentInterface")
+        
         # Add interfaces to navigation
+        self.addSubInterface(self.dashboard_view, FIF.HOME, "Dashboard")
         self.addSubInterface(self.chat_tab, FIF.CHAT, "Chat")
         self.addSubInterface(self.planner_tab, FIF.CALENDAR, "Planner")
         self.addSubInterface(self.briefing_view, FIF.DATE_TIME, "Briefing")
-        self.addSubInterface(self.home_tab, FIF.HOME, "Home Auto")
+        self.addSubInterface(self.home_tab, FIF.LAYOUT, "Home Auto")
+        self.addSubInterface(self.agent_tab, FIF.ROBOT, "Agent")
         
     def _connect_signals(self):
         """Connect signals between UI components and logic."""
@@ -80,6 +93,9 @@ class MainWindow(FluentWindow):
         self.chat_tab.session_pin_requested.connect(self.handlers.pin_session)
         self.chat_tab.session_rename_requested.connect(self.handlers.rename_session)
         self.chat_tab.session_delete_requested.connect(self.handlers.delete_session)
+        
+        # Tab change - unload models when switching
+        self.stackedWidget.currentChanged.connect(self._on_tab_changed)
 
     def _on_send(self, text):
         """Forward send request to handlers."""
@@ -90,17 +106,22 @@ class MainWindow(FluentWindow):
         self.handlers.load_session(session_id)
     
     def _init_background(self):
-        """Initialize models in background."""
-        def preload_background():
-            self.set_status("Warming up models...")
-            preload_models()
-            if tts.toggle(True):
-                self.set_status("Ready | TTS Active")
-            else:
-                self.set_status("Ready | TTS Failed")
-        
-        threading.Thread(target=preload_background, daemon=True).start()
+        """Initialize app without preloading models."""
+        # Models are loaded on-demand when user interacts
+        self.set_status("Ready")
         self.chat_tab.refresh_sidebar()
+    
+    def _init_system_monitor(self):
+        """Add system monitor widget to the title bar."""
+        self.system_monitor = SystemMonitor()
+        # Add to the title bar (right side)
+        self.titleBar.hBoxLayout.insertWidget(4, self.system_monitor, 1)
+    
+    def _on_tab_changed(self, index):
+        """Called when user switches tabs. Unload models to free VRAM."""
+        # Unload all models when switching away from AI tabs
+        unload_all_models()
+        self.set_status("Ready")
     
     # --- Public Methods for Handlers (Facade Pattern) ---
     
