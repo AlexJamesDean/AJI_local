@@ -8,13 +8,13 @@ import psutil
 MODELS = [
     #{"model": "qwen3:0.6b", "think": False, "name": "qwen3:0.6b"},
     #{"model": "qwen3:0.6b", "think": True, "name": "qwen3:0.6b (think)"},
-    {"model": "qwen3:1.7b", "think": False, "name": "qwen3:1.7b"},
-    #{"model": "qwen3:1.7b", "think": True, "name": "qwen3:1.7b (think)"},
+    #{"model": "qwen3:1.7b", "think": False, "name": "qwen3:1.7b"},
+    {"model": "qwen3:1.7b", "think": True, "name": "qwen3:1.7b (think)"},
     #{"model": "qwen3:4b", "think": False, "name": "qwen3:4b"},
     #{"model": "qwen3:4b", "think": True, "name": "qwen3:4b (think)"},
-    {"model": "gemma3:1b", "think": False, "name": "gemma3:1b"},
-    {"model": "deepseek-r1:1.5b", "think": False, "name": "deepseek-r1:1.5b"},
-    #{"model": "deepseek-r1:1.5b", "think": True, "name": "deepseek-r1:1.5b (think)"},
+    #{"model": "gemma3:1b", "think": False, "name": "gemma3:1b"},
+    #{"model": "deepseek-r1:1.5b", "think": False, "name": "deepseek-r1:1.5b"},
+    {"model": "deepseek-r1:1.5b", "think": True, "name": "deepseek-r1:1.5b (think)"},
 ] 
 
 # Ground truth Q&A pairs for accuracy testing
