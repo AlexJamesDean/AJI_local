@@ -62,10 +62,12 @@ class KasaManager:
             print(f"Error connecting to {ip}: {e}")
             return None, None
 
-    async def turn_on(self, ip: str) -> bool:
-        """Turns on the device with the given IP."""
+    async def turn_on(self, ip: str, dev: Any = None) -> bool:
+        """Turns on the device with the given IP. Uses provided device object if available."""
         try:
-            dev = await Discover.discover_single(ip)
+            if dev is None:
+                dev = await Discover.discover_single(ip)
+            
             if dev:
                 await dev.update()
                 await dev.turn_on()
@@ -74,10 +76,12 @@ class KasaManager:
             print(f"Error turning on {ip}: {e}")
         return False
 
-    async def turn_off(self, ip: str) -> bool:
-        """Turns off the device with the given IP."""
+    async def turn_off(self, ip: str, dev: Any = None) -> bool:
+        """Turns off the device with the given IP. Uses provided device object if available."""
         try:
-            dev = await Discover.discover_single(ip)
+            if dev is None:
+                dev = await Discover.discover_single(ip)
+            
             if dev:
                 await dev.update()
                 await dev.turn_off()
@@ -86,10 +90,18 @@ class KasaManager:
             print(f"Error turning off {ip}: {e}")
         return False
     
-    async def set_brightness(self, ip: str, level: int) -> bool:
-        """Sets brightness (0-100) for the device."""
+    async def set_brightness(self, ip: str, level: int, dev: Any = None) -> bool:
+        """Sets brightness (0-100) for the device. Uses provided device object if available."""
         try:
-            dev, light = await self._get_light_module(ip)
+            light = None
+            if dev:
+                # If we have the device, check if it has modules (smart strip/plug with children) or is a bulb
+                await dev.update()
+                if hasattr(dev, "modules") and Module.Light in dev.modules:
+                    light = dev.modules[Module.Light]
+            else:
+                 dev, light = await self._get_light_module(ip)
+
             if light and light.has_feature("brightness"):
                 await light.set_brightness(level)
                 return True
@@ -97,10 +109,17 @@ class KasaManager:
             print(f"Error setting brightness for {ip}: {e}")
         return False
 
-    async def set_hsv(self, ip: str, h: int, s: int, v: int) -> bool:
-        """Sets HSV color for the device."""
+    async def set_hsv(self, ip: str, h: int, s: int, v: int, dev: Any = None) -> bool:
+        """Sets HSV color for the device. Uses provided device object if available."""
         try:
-            dev, light = await self._get_light_module(ip)
+            light = None
+            if dev:
+                 await dev.update()
+                 if hasattr(dev, "modules") and Module.Light in dev.modules:
+                    light = dev.modules[Module.Light]
+            else:
+                dev, light = await self._get_light_module(ip)
+
             if light and light.has_feature("hsv"):
                 await light.set_hsv(h, s, v)
                 return True

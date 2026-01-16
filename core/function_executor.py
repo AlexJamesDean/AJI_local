@@ -69,8 +69,8 @@ class FunctionExecutor:
             print(f"[FunctionExecutor] CalendarManager init failed: {e}")
         
         try:
-            from core.kasa_control import KasaManager
-            self.kasa_manager = KasaManager()
+            from core.kasa_control import kasa_manager
+            self.kasa_manager = kasa_manager
         except Exception as e:
             print(f"[FunctionExecutor] KasaManager init failed: {e}")
         
@@ -145,53 +145,99 @@ class FunctionExecutor:
         if not devices:
             return {"success": False, "message": "No smart devices found", "data": None}
         
-        # Find matching device
-        target_device = None
+        print(f"\n[FunctionExecutor] _control_light called with: {params}")
+        
+        # Find ALL matching devices
+        target_devices = []  # List of (ip, info)
         device_name_lower = device_name.lower()
         
-        for ip, info in devices.items():
-            if device_name_lower in info.get("alias", "").lower():
-                target_device = (ip, info)
-                break
+        # Check for explicit "all"
+        if device_name_lower in ("all", "lights", "light", "everything"):
+             target_devices = list(devices.items())
+        else:
+            # Fuzzy match
+            for ip, info in devices.items():
+                if device_name_lower in info.get("alias", "").lower():
+                    target_devices.append((ip, info))
         
-        # If no match, use first device or "all"
-        if not target_device and device_name_lower in ("all", "lights", "light"):
-            target_device = next(iter(devices.items())) if devices else None
+        print(f"[FunctionExecutor] Matched {len(target_devices)} devices: {[t[1].get('alias') for t in target_devices]}")
         
-        if not target_device:
+        if not target_devices:
+            print("[FunctionExecutor] No devices matched.")
             return {"success": False, "message": f"Device '{device_name}' not found", "data": None}
         
-        ip, info = target_device
+        # Execute action on ALL targets
+        results = []
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            if action == "on":
-                success = loop.run_until_complete(self.kasa_manager.turn_on(ip))
-                msg = f"Turned on {info.get('alias', device_name)}"
-            elif action == "off":
-                success = loop.run_until_complete(self.kasa_manager.turn_off(ip))
-                msg = f"Turned off {info.get('alias', device_name)}"
-            elif action == "dim" and brightness is not None:
-                success = loop.run_until_complete(self.kasa_manager.set_brightness(ip, brightness))
-                msg = f"Set {info.get('alias', device_name)} to {brightness}%"
-            elif action == "toggle":
-                # Check current state and toggle
-                if info.get("is_on"):
-                    success = loop.run_until_complete(self.kasa_manager.turn_off(ip))
-                    msg = f"Turned off {info.get('alias', device_name)}"
-                else:
-                    success = loop.run_until_complete(self.kasa_manager.turn_on(ip))
-                    msg = f"Turned on {info.get('alias', device_name)}"
-            else:
+            for ip, info in target_devices:
+                alias = info.get('alias', device_name)
+                dev_obj = info.get('obj') # Get the cached device object
                 success = False
-                msg = f"Unknown action: {action}"
+                
+                if action == "on":
+                    success = loop.run_until_complete(self.kasa_manager.turn_on(ip, dev=dev_obj))
+                    action_desc = "Turned on"
+                elif action == "off":
+                    success = loop.run_until_complete(self.kasa_manager.turn_off(ip, dev=dev_obj))
+                    action_desc = "Turned off"
+                elif action == "dim" and brightness is not None:
+                    success = loop.run_until_complete(self.kasa_manager.set_brightness(ip, brightness, dev=dev_obj))
+                    action_desc = f"Set brightness to {brightness}% for"
+                elif action == "color" and color:
+                    # Basic color map
+                    colors = {
+                        "red": (0, 100, 100),
+                        "orange": (30, 100, 100),
+                        "yellow": (60, 100, 100),
+                        "green": (120, 100, 100),
+                        "cyan": (180, 100, 100),
+                        "blue": (240, 100, 100),
+                        "purple": (270, 100, 100),
+                        "pink": (300, 100, 100),
+                        "white": (0, 0, 100),
+                        "warm": (30, 80, 100),
+                        "daylight": (0, 0, 100)
+                    }
+                    
+                    target_hsv = colors.get(color.lower())
+                    if target_hsv:
+                        h, s, v = target_hsv
+                        success = loop.run_until_complete(self.kasa_manager.set_hsv(ip, h, s, v, dev=dev_obj))
+                        action_desc = f"Set color to {color} for"
+                    else:
+                        success = False
+                        action_desc = f"Unknown color '{color}' for"
+
+                elif action == "toggle":
+                    if info.get("is_on"):
+                        success = loop.run_until_complete(self.kasa_manager.turn_off(ip, dev=dev_obj))
+                        action_desc = "Turned off"
+                    else:
+                        success = loop.run_until_complete(self.kasa_manager.turn_on(ip, dev=dev_obj))
+                        action_desc = "Turned on"
+                else:
+                    action_desc = f"Unknown action {action} for"
+                
+                if success:
+                    results.append(f"{action_desc} {alias}")
             
             loop.close()
-            return {"success": success, "message": msg, "data": {"device": info.get("alias"), "action": action}}
+            
+            if not results:
+                return {"success": False, "message": "Failed to control any devices", "data": None}
+            
+            return {
+                "success": True, 
+                "message": ", ".join(results), 
+                "data": {"device": device_name, "action": action, "targets": [t[1].get('alias') for t in target_devices]}
+            }
             
         except Exception as e:
+            if loop.is_running():
+                loop.close()
             return {"success": False, "message": f"Light control failed: {e}", "data": None}
     
     def _set_timer(self, params: Dict) -> Dict:

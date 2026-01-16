@@ -33,6 +33,15 @@ class QwenModelManager:
                 self.last_used_time = time.time()
                 return True
             
+            # Check if already running in Ollama (persistence restart case)
+            running_models = get_running_models()
+            if self.model_name in running_models or any(self.model_name in m for m in running_models):
+                print(f"{CYAN}[QwenManager] {self.model_name} already running in Ollama.{RESET}")
+                self.is_loaded = True
+                self.last_used_time = time.time()
+                self._start_timeout_monitor()
+                return True
+            
             # Load the model
             try:
                 print(f"{CYAN}[QwenManager] Loading {self.model_name}...{RESET}")

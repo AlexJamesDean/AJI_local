@@ -200,3 +200,130 @@ NoneType: None
 2026-01-13 23:06:15.116 - RealTimeSTT: realtimestt - INFO - Setting listen time
 2026-01-13 23:06:15.116 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
 2026-01-13 23:06:15.116 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 19:09:11.578 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 19:09:11.603 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 19:09:11.621 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 19:09:11.621 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 19:09:11.621 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 19:09:13.017 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 19:09:13.033 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 19:09:13.033 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 19:09:27.272 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 19:09:27.274 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 19:09:27.279 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 19:09:27.279 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 19:09:27.279 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 19:09:27.335 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 19:14:32.990 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 19:14:33.012 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 19:14:33.025 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 19:14:33.025 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 19:14:33.026 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 19:14:34.197 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 19:14:34.214 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 19:14:34.215 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 19:14:47.587 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 19:14:47.590 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 19:14:47.592 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 19:14:47.593 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 19:14:47.593 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 19:14:47.631 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 19:25:16.300 - RealTimeSTT: realtimestt - DEBUG - Receive from stdout pipe
+2026-01-15 19:25:16.301 - RealTimeSTT: realtimestt - INFO - None
+2026-01-15 19:25:16.315 - RealTimeSTT: realtimestt - DEBUG - No samples removed, final audio length: 0
+2026-01-15 19:25:16.315 - RealTimeSTT: realtimestt - INFO - State changed from 'wakeword' to 'inactive'
+2026-01-15 19:26:17.919 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 19:26:17.934 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 19:26:17.948 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 19:26:17.948 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 19:26:17.948 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 19:26:19.191 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 19:26:19.217 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 19:26:19.217 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 19:26:38.001 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 19:26:38.003 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 19:26:38.005 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 19:26:38.005 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 19:26:38.005 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 19:26:38.019 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 19:57:50.449 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 19:57:50.465 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 19:57:50.476 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 19:57:50.476 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 19:57:50.476 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 19:57:51.590 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 19:57:51.602 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 19:57:51.602 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 19:58:04.849 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 19:58:04.851 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 19:58:04.870 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 19:58:04.870 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 19:58:04.870 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 19:58:04.903 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 20:05:18.507 - RealTimeSTT: realtimestt - DEBUG - No samples removed, final audio length: 0
+2026-01-15 20:05:18.507 - RealTimeSTT: realtimestt - INFO - State changed from 'wakeword' to 'inactive'
+2026-01-15 20:09:18.855 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 20:09:18.868 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 20:09:18.881 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 20:09:18.881 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 20:09:18.881 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 20:09:19.660 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 20:09:19.669 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 20:09:19.669 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 20:09:31.760 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 20:09:31.762 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 20:09:31.766 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 20:09:31.766 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 20:09:31.766 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 20:09:31.803 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 20:15:29.258 - RealTimeSTT: realtimestt - DEBUG - No samples removed, final audio length: 0
+2026-01-15 20:15:29.258 - RealTimeSTT: realtimestt - INFO - State changed from 'wakeword' to 'inactive'
+2026-01-15 20:16:02.939 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 20:16:02.954 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 20:16:02.966 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 20:16:02.966 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 20:16:02.966 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 20:16:04.366 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 20:16:04.371 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 20:16:04.372 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 20:16:14.433 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 20:16:14.434 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 20:16:14.438 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 20:16:14.438 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 20:16:14.438 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 20:16:14.447 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 20:24:53.907 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 20:24:53.921 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 20:24:53.931 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 20:24:53.931 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 20:24:53.932 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 20:24:54.702 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 20:24:54.706 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 20:24:54.706 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 20:25:04.997 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 20:25:04.999 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 20:25:05.004 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 20:25:05.005 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 20:25:05.005 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 20:25:05.061 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'
+2026-01-15 20:25:39.613 - RealTimeSTT: realtimestt - DEBUG - Receive from stdout pipe
+2026-01-15 20:25:39.614 - RealTimeSTT: realtimestt - INFO - None
+2026-01-15 20:25:39.628 - RealTimeSTT: realtimestt - DEBUG - No samples removed, final audio length: 0
+2026-01-15 20:25:39.629 - RealTimeSTT: realtimestt - INFO - State changed from 'wakeword' to 'inactive'
+2026-01-15 20:25:39.630 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 20:25:39.631 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 20:25:39.631 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 20:26:48.505 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-01-15 20:26:48.522 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-01-15 20:26:48.532 - RealTimeSTT: realtimestt - DEBUG - Porcupine wake word detection engine initialized successfully
+2026-01-15 20:26:48.532 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-01-15 20:26:48.532 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-01-15 20:26:49.769 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-01-15 20:26:49.776 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-01-15 20:26:49.776 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-01-15 20:26:59.877 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-01-15 20:26:59.879 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-01-15 20:26:59.881 - RealTimeSTT: realtimestt - INFO - Setting listen time
+2026-01-15 20:26:59.881 - RealTimeSTT: realtimestt - INFO - State changed from 'inactive' to 'listening'
+2026-01-15 20:26:59.881 - RealTimeSTT: realtimestt - DEBUG - Waiting for recording start
+2026-01-15 20:26:59.884 - RealTimeSTT: realtimestt - INFO - State changed from 'listening' to 'wakeword'

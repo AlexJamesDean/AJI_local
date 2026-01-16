@@ -130,9 +130,14 @@ VALID_FUNCTIONS = {
 class FunctionGemmaRouter:
     """Routes user prompts to appropriate functions using fine-tuned FunctionGemma."""
     
-    def __init__(self, model_path: str = "./merged_model", compile_model: bool = False):
+    def __init__(self, model_path: str = "google/functiongemma-it", compile_model: bool = False):
+        # NOTE: Updated default to base model, handle lookup if needed or assume name
+        # The user's file said "google/functiongemma-270m-it" in train_function_gemma.py
+        if model_path == "google/functiongemma-it": 
+             model_path = "google/functiongemma-270m-it" 
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Loading FunctionGemma Router on {device.upper()}...")
+        print(f"Loading FunctionGemma Router (ORIGINAL: {model_path}) on {device.upper()}...")
         start = time.time()
         
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -288,7 +293,8 @@ class FunctionGemmaRouter:
 
 
 if __name__ == "__main__":
-    router = FunctionGemmaRouter(compile_model=False)
+    # Use base model by default
+    router = FunctionGemmaRouter(model_path="google/functiongemma-270m-it", compile_model=False)
     
     test_prompts = [
         # Action functions
@@ -322,7 +328,7 @@ if __name__ == "__main__":
     ]
     
     print("\n" + "="*70)
-    print("FUNCTION CALLING ROUTER TEST")
+    print("FUNCTION CALLING ROUTER TEST (ORIGINAL BASE MODEL)")
     print("="*70)
     
     total_time = 0
