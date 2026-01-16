@@ -35,6 +35,7 @@ class ChatWorker(QObject):
     toast = Signal(str, bool)  # message, success
     set_timer_signal = Signal(int, str)  # seconds, label
     reload_alarms = Signal()  # trigger alarm list reload
+    reload_calendar = Signal()  # trigger calendar refresh
     search_start = Signal(str)  # query
     search_end = Signal()
     
@@ -83,6 +84,8 @@ class ChatWorker(QObject):
                     self.set_timer_signal.emit(seconds, label)
                 elif func_name == "set_alarm" and result["success"]:
                     self.reload_alarms.emit()
+                elif func_name == "create_calendar_event" and result["success"]:
+                    self.reload_calendar.emit()
                 
                 # Enable thinking for web_search
                 enable_thinking = (func_name == "web_search")
@@ -96,7 +99,7 @@ class ChatWorker(QObject):
                 result = function_executor.execute(func_name, params)
                 
                 # Generate Qwen response with full system context
-                self._generate_response_with_context(func_name, result)
+                self._generate_response_with_context(func_name, result, enable_thinking=True)
             
             # Handle thinking/nonthinking (direct passthrough)
             elif func_name in ("thinking", "nonthinking"):
@@ -469,6 +472,17 @@ class ChatHandlers(QObject):
                     planner.alarm_component.reload()
         except Exception as e:
             print(f"[Handlers] Alarm reload failed: {e}")
+
+    def _on_reload_calendar(self):
+        """Reload calendar GUI when event added via voice command."""
+        try:
+            # Access schedule component via planner lazy tab
+            if hasattr(self.main_window, 'planner_lazy') and self.main_window.planner_lazy.actual_widget:
+                planner = self.main_window.planner_lazy.actual_widget
+                if hasattr(planner, 'schedule_component'):
+                    planner.schedule_component.refresh_events()
+        except Exception as e:
+            print(f"[Handlers] Calendar reload failed: {e}")
     
     def _on_search_start(self, query: str):
         """Called when web search starts."""
@@ -577,6 +591,7 @@ class ChatHandlers(QObject):
         self._worker.toast.connect(self._on_toast)
         self._worker.set_timer_signal.connect(self._on_set_timer)
         self._worker.reload_alarms.connect(self._on_reload_alarms)
+        self._worker.reload_calendar.connect(self._on_reload_calendar)
         self._worker.search_start.connect(self._on_search_start)
         self._worker.search_end.connect(self._on_search_end)
         self._worker.done.connect(self._on_done)

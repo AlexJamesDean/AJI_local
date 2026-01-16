@@ -173,7 +173,7 @@ class VoiceAssistant(QObject):
             elif func_name == "get_system_info":
                 # Get system info
                 result = function_executor.execute(func_name, params)
-                self._generate_response_with_context(func_name, result, user_text)
+                self._generate_response_with_context(func_name, result, user_text, enable_thinking=True)
                 
             elif func_name in ("thinking", "nonthinking"):
                 # Direct Qwen passthrough
@@ -190,7 +190,7 @@ class VoiceAssistant(QObject):
             self.error_occurred.emit(error_msg)
             self.processing_finished.emit()
     
-    def _generate_response_with_context(self, func_name: str, result: dict, user_text: str):
+    def _generate_response_with_context(self, func_name: str, result: dict, user_text: str, enable_thinking: bool = False):
         """Generate Qwen response with function execution context."""
         try:
             # Ensure Qwen is loaded
@@ -247,7 +247,7 @@ class VoiceAssistant(QObject):
                 "model": RESPONDER_MODEL,
                 "messages": self.messages,
                 "stream": True,
-                "think": False,
+                "think": enable_thinking,
                 "keep_alive": "5m"
             }
             

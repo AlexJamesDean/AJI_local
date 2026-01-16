@@ -208,7 +208,11 @@ class HomeAutomationTab(QWidget):
         main_layout.addWidget(self.scroll)
         
         # Load Devices
-        self._load_devices()
+        if kasa_manager.devices:
+            print("[HomeAutomation] Using cached devices")
+            self._on_devices_loaded(list(kasa_manager.devices.values()))
+        else:
+            self._load_devices()
 
     def _setup_header(self, parent_layout):
         header = QHBoxLayout()

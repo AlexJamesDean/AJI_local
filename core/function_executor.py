@@ -384,6 +384,14 @@ class FunctionExecutor:
     def _parse_date(self, date_str: str) -> str:
         """Parse date string to YYYY-MM-DD format."""
         date_str = date_str.lower().strip()
+        
+        # Try to parse as explicit date first
+        try:
+            val = datetime.strptime(date_str, "%Y-%m-%d")
+            return val.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+            
         today = datetime.now()
         
         if date_str in ("today", ""):
