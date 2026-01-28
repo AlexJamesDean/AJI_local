@@ -53,12 +53,12 @@ Before you begin, make sure you have:
 
 ## 🚀 Quick Start Guide
 
-Follow these steps to get A.D.A running on your system:
+Follow these steps to get A.J.I running on your system:
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/pocket_ai.git
+git clone https://github.com/AlexJamesDean/AJI_local.git
 cd pocket_ai
 ```
 
